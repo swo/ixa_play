@@ -1,0 +1,9 @@
+[package]
+name = "ixa_play"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+ixa = { git = "https://github.com/CDCgov/ixa", branch = "release", version = "0.0.1" }
+rand_distr = "0.4.3"
+serde = { version = "1.0.228", features = ["derive"] }
