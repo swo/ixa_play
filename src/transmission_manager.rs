@@ -1,4 +1,3 @@
-// ANCHOR: imports
 use ixa::prelude::*;
 use ixa::trace;
 use rand_distr::Exp;
@@ -7,9 +6,7 @@ use crate::people::{InfectionStatus, PersonId};
 use crate::{FORCE_OF_INFECTION, POPULATION};
 
 define_rng!(TransmissionRng);
-// ANCHOR_END: imports
 
-// ANCHOR: attempt_infection
 fn attempt_infection(context: &mut Context) {
     trace!("Attempting infection");
     let person_to_infect: PersonId = context.sample_entity(TransmissionRng, ()).unwrap();
@@ -31,4 +28,3 @@ pub fn init(context: &mut Context) {
     trace!("Initializing transmission manager");
     context.add_plan(0.0, attempt_infection);
 }
-// ANCHOR_END: attempt_infection
