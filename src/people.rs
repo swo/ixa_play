@@ -1,23 +1,32 @@
-use ixa::{Context, ContextPeopleExt, define_person_property_with_default, trace};
-use serde::{Deserialize, Serialize};
+/* ANCHOR: all */
+use ixa::prelude::*;
+use ixa::trace;
 
-#[derive(Debug, Hash, Eq, PartialEq, Clone, Copy, Serialize, Deserialize)]
-pub enum InfectionStatusValue {
-    S,
-    I,
-    R,
-}
+use crate::POPULATION;
 
-define_person_property_with_default!(
-    InfectionStatus,         // Property Name
-    InfectionStatusValue,    // Type of the Property Values
-    InfectionStatusValue::S  // Default value used when a person is added to the simulation
+// ANCHOR: define_property
+define_entity!(Person);
+define_property!(
+    // The type of the property
+    enum InfectionStatus {
+        S,
+        I,
+        R,
+    },
+    // The entity the property is associated with
+    Person,
+    // The property's default value for newly created `Person` entities
+    default_const = InfectionStatus::S
 );
+// ANCHOR_END: define_property
 
-/// Populates the "world" with the `population` number of people.
-pub fn init(context: &mut Context, population: u64) {
+// ANCHOR: init
+/// Populates the "world" with the `POPULATION` number of people.
+pub fn init(context: &mut Context) {
     trace!("Initializing people");
-    for _ in 0..population {
-        context.add_person(()).expect("failed to add person");
+    for _ in 0..POPULATION {
+        let _: PersonId = context.add_entity(()).expect("failed to add person");
     }
 }
+// ANCHOR_END: init
+/* ANCHOR_END: all */

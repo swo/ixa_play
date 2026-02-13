@@ -2,11 +2,12 @@ mod incidence_report;
 mod infection_manager;
 mod people;
 mod transmission_manager;
+
 use ixa::{Context, error, info, run_with_args};
 
 static POPULATION: u64 = 100;
 static FORCE_OF_INFECTION: f64 = 0.1;
-static MAX_TIME: f64 = 10.0;
+static MAX_TIME: f64 = 200.0;
 static INFECTION_DURATION: f64 = 10.0;
 
 fn main() {
@@ -16,7 +17,7 @@ fn main() {
         context.add_plan(MAX_TIME, |context| {
             context.shutdown();
         });
-        people::init(context, POPULATION);
+        people::init(context);
         transmission_manager::init(context);
         infection_manager::init(context);
         incidence_report::init(context).expect("Failed to init incidence report");

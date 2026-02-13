@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-ixa = { git = "https://github.com/CDCgov/ixa", branch = "release", version = "0.0.1" }
-rand_distr = "0.4.3"
+csv = "1.4.0"
+ixa = { git = "https://github.com/CDCgov/ixa", branch = "main", version = "2.0.0-beta1" }
+rand_distr = "0.5.1"
 serde = { version = "1.0.228", features = ["derive"] }
