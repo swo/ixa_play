@@ -25,9 +25,18 @@ fn handle_infection_status_change(context: &mut Context, event: InfectionStatusE
         "Handling infection status change from {:?} to {:?} for {:?}",
         event.previous, event.current, event.entity_id
     );
-    if event.current == InfectionStatus::I {
-        schedule_recovery(context, event.entity_id);
-    }
+
+    match event.current {
+        InfectionStatus::I => schedule_recovery(context, event.entity_id),
+        InfectionStatus::R => {
+            let n_infectious = context.query_entity_count::<Person, _>((InfectionStatus::I,));
+            if n_infectious == 0 {
+                trace!("No infectious; shutting down");
+                context.shutdown();
+            }
+        }
+        _ => (),
+    };
 }
 
 pub fn init(context: &mut Context) {
