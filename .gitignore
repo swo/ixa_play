@@ -42,3 +42,4 @@ examples/**/output/**
 profile.json.gz
 
 *.csv
+*.svg
