@@ -1,3 +1,4 @@
+mod contacts;
 mod incidence_report;
 mod infection_manager;
 mod people;

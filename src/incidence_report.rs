@@ -4,22 +4,25 @@ use ixa::prelude::*;
 use ixa::trace;
 use serde::Serialize;
 
-use crate::infection_manager::CreationEvent;
-use crate::people::PersonId;
+use crate::infection_manager::InfectionStatusEvent;
+use crate::people::{InfectionStatus, Person};
 
 #[derive(Serialize, Clone)]
-struct CreationReportItem {
+struct PrevalenceReportItem {
     time: f64,
-    person_id: PersonId,
+    n: usize,
 }
 
-define_report!(CreationReportItem);
+define_report!(PrevalenceReportItem);
 
-fn handle_creation(context: &mut Context, event: CreationEvent) {
-    trace!("Recording creation event for ID {}", event.entity_id);
-    context.send_report(CreationReportItem {
+fn handle_infection_status_event(context: &mut Context, event: InfectionStatusEvent) {
+    trace!(
+        "Recording creation event for ID {} from {:?} to {:?}",
+        event.entity_id, event.previous, event.current
+    );
+    context.send_report(PrevalenceReportItem {
         time: context.get_current_time(),
-        person_id: event.entity_id,
+        n: context.query_entity_count::<Person, _>((InfectionStatus::I,)),
     });
 }
 
@@ -30,7 +33,7 @@ pub fn init(context: &mut Context, output_dir: PathBuf) -> Result<(), IxaError> 
         .report_options()
         .directory(output_dir)
         .overwrite(true);
-    context.add_report::<CreationReportItem>("creation")?;
-    context.subscribe_to_event::<CreationEvent>(handle_creation);
+    context.add_report::<PrevalenceReportItem>("prevalence")?;
+    context.subscribe_to_event::<InfectionStatusEvent>(handle_infection_status_event);
     Ok(())
 }
