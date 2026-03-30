@@ -1,36 +1,31 @@
 use ixa::prelude::*;
-use rand_distr::Exp;
+// use rand_distr::Exp;
 
-use crate::INFECTION_DURATION;
 use crate::people::{InfectionStatus, Person, PersonId};
+use crate::{GI, N_OFFSPRING};
+pub type CreationEvent = EntityCreatedEvent<Person>;
 
-pub type InfectionStatusEvent = PropertyChangeEvent<Person, InfectionStatus>;
-
-define_rng!(InfectionRng);
-
-fn schedule_recovery(context: &mut Context, person_id: PersonId) {
-    trace!("Scheduling recovery");
-    let current_time = context.get_current_time();
-    let sampled_infection_duration =
-        context.sample_distr(InfectionRng, Exp::new(1.0 / INFECTION_DURATION).unwrap());
-    let recovery_time = current_time + sampled_infection_duration;
-
-    context.add_plan(recovery_time, move |context| {
-        context.set_property(person_id, InfectionStatus::R);
-    });
+// define_rng!(InfectionRng);
+fn handle_person_creation(context: &mut Context, event: CreationEvent) {
+    trace!("Handling person creation");
+    schedule_infection(context, event.entity_id);
 }
 
-fn handle_infection_status_change(context: &mut Context, event: InfectionStatusEvent) {
-    trace!(
-        "Handling infection status change from {:?} to {:?} for {:?}",
-        event.previous, event.current, event.entity_id
-    );
-    if event.current == InfectionStatus::I {
-        schedule_recovery(context, event.entity_id);
+fn schedule_infection(context: &mut Context, person_id: PersonId) {
+    trace!("Scheduling infection");
+    let current_time = context.get_current_time();
+    context.add_plan(current_time + GI, move |context| infect(context, person_id));
+}
+
+fn infect(context: &mut Context, infector: PersonId) {
+    trace!("Infecting");
+    for _ in 0..N_OFFSPRING {
+        let _: PersonId = context.add_entity(()).expect("failed to add person");
     }
+    context.set_property(infector, InfectionStatus::R);
 }
 
 pub fn init(context: &mut Context) {
     trace!("Initializing infection_manager");
-    context.subscribe_to_event::<InfectionStatusEvent>(handle_infection_status_change);
+    context.subscribe_to_event::<CreationEvent>(handle_person_creation);
 }

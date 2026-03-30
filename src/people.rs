@@ -1,26 +1,22 @@
 use ixa::prelude::*;
 use ixa::trace;
 
-use crate::POPULATION;
+use crate::I0;
 
 define_entity!(Person);
 define_property!(
-    // The type of the property
     enum InfectionStatus {
-        S,
         I,
         R,
     },
-    // The entity the property is associated with
     Person,
-    // The property's default value for newly created `Person` entities
-    default_const = InfectionStatus::S
+    default_const = InfectionStatus::I
 );
 
 /// Populates the "world" with the `POPULATION` number of people.
 pub fn init(context: &mut Context) {
-    trace!("Initializing people");
-    for _ in 0..POPULATION {
+    trace!("Initializing person");
+    for _ in 0..I0 {
         let _: PersonId = context.add_entity(()).expect("failed to add person");
     }
 }

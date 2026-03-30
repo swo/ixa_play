@@ -1,26 +1,24 @@
 mod incidence_report;
 mod infection_manager;
 mod people;
-mod transmission_manager;
 
 use ixa::{Context, error, info, run_with_args};
 
-static POPULATION: u64 = 100;
-static FORCE_OF_INFECTION: f64 = 0.1;
-static MAX_TIME: f64 = 200.0;
-static INFECTION_DURATION: f64 = 10.0;
+static I0: u64 = 1;
+static GI: f64 = 10.0;
+static MAX_TIME: f64 = 25.0;
+static N_OFFSPRING: usize = 3;
 
 fn main() {
     let result = run_with_args(|context: &mut Context, _args, _| {
-        // Add a plan to shut down the simulation after `max_time`, regardless of
-        // what else is happening in the model.
+        // Shut down the simulation after `max_time`
         context.add_plan(MAX_TIME, |context| {
             context.shutdown();
         });
-        people::init(context);
-        transmission_manager::init(context);
+        incidence_report::init(context, _args.output_dir.expect("no output dir"))
+            .expect("Failed to init incidence report");
         infection_manager::init(context);
-        incidence_report::init(context).expect("Failed to init incidence report");
+        people::init(context);
         Ok(())
     });
 

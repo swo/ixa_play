@@ -4,45 +4,33 @@ use ixa::prelude::*;
 use ixa::trace;
 use serde::Serialize;
 
-use crate::infection_manager::InfectionStatusEvent;
-use crate::people::{InfectionStatus, PersonId};
+use crate::infection_manager::CreationEvent;
+use crate::people::PersonId;
 
 #[derive(Serialize, Clone)]
-struct IncidenceReportItem {
+struct CreationReportItem {
     time: f64,
     person_id: PersonId,
-    infection_status: InfectionStatus,
 }
 
-define_report!(IncidenceReportItem);
+define_report!(CreationReportItem);
 
-fn handle_infection_status_change(context: &mut Context, event: InfectionStatusEvent) {
-    trace!(
-        "Recording infection status change from {:?} to {:?} for {:?}",
-        event.previous, event.current, event.entity_id
-    );
-    context.send_report(IncidenceReportItem {
+fn handle_creation(context: &mut Context, event: CreationEvent) {
+    trace!("Recording creation event for ID {}", event.entity_id);
+    context.send_report(CreationReportItem {
         time: context.get_current_time(),
         person_id: event.entity_id,
-        infection_status: event.current,
     });
 }
 
-pub fn init(context: &mut Context) -> Result<(), IxaError> {
+pub fn init(context: &mut Context, output_dir: PathBuf) -> Result<(), IxaError> {
     trace!("Initializing incidence_report");
 
-    // Output directory is relative to the directory with the Cargo.toml file.
-    let output_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-
-    // In the configuration of report options below, we set `overwrite(true)`, which is not
-    // recommended for production code in order to prevent accidental data loss. It is set
-    // here so that newcomers won't have to deal with a confusing error while running
-    // examples.
     context
         .report_options()
-        .directory(output_path)
+        .directory(output_dir)
         .overwrite(true);
-    context.add_report::<IncidenceReportItem>("incidence")?;
-    context.subscribe_to_event::<InfectionStatusEvent>(handle_infection_status_change);
+    context.add_report::<CreationReportItem>("creation")?;
+    context.subscribe_to_event::<CreationEvent>(handle_creation);
     Ok(())
 }
