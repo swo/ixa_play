@@ -1,9 +1,11 @@
 use ixa::prelude::*;
 use ixa::trace;
+use rand_distr::Bernoulli;
 use rand_distr::Exp;
 
+use crate::people::HandwashingAdherence;
 use crate::people::{InfectionStatus, PersonId};
-use crate::{FORCE_OF_INFECTION, POPULATION};
+use crate::{FORCE_OF_INFECTION, HANDWASHING_EFFICACY, POPULATION};
 
 define_rng!(TransmissionRng);
 
@@ -13,7 +15,13 @@ fn attempt_infection(context: &mut Context) {
     let person_status: InfectionStatus = context.get_property(person_to_infect);
 
     if person_status == InfectionStatus::S {
-        context.set_property(person_to_infect, InfectionStatus::I);
+        let risk = match context.get_property(person_to_infect) {
+            HandwashingAdherence::Typical => 1.0,
+            HandwashingAdherence::High => 1.0 / HANDWASHING_EFFICACY,
+        };
+        if context.sample_distr(TransmissionRng, Bernoulli::new(risk).unwrap()) {
+            context.set_property(person_to_infect, InfectionStatus::I);
+        }
     }
 
     #[allow(clippy::cast_precision_loss)]

@@ -9,6 +9,8 @@ static POPULATION: u64 = 100;
 static FORCE_OF_INFECTION: f64 = 0.1;
 static MAX_TIME: f64 = 200.0;
 static INFECTION_DURATION: f64 = 10.0;
+static FRAC_HIGH_HANDWASHING: f64 = 0.25;
+static HANDWASHING_EFFICACY: f64 = 2.0;
 
 fn main() {
     let result = run_with_args(|context: &mut Context, _args, _| {

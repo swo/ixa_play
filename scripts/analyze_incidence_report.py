@@ -3,6 +3,8 @@ import numpy as np
 import polars as pl
 
 POPULATION = 100
+HW_EFF = 2.0
+HW_FRAC = 0.25
 FOI = 0.1
 
 
@@ -21,7 +23,9 @@ def main() -> None:
 
     # theory
     t = np.linspace(0.0, sim["time"].to_numpy().max(), num=101)
-    s = POPULATION * np.exp(-(FOI * t))
+    s = POPULATION * (
+        (1.0 - HW_FRAC) * np.exp(-(FOI * t)) + HW_FRAC * np.exp(-FOI / HW_EFF * t)
+    )
 
     theory = pl.DataFrame({"time": t, "value": s, "variable": "s", "source": "theory"})
 
