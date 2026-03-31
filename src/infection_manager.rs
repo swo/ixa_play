@@ -1,6 +1,7 @@
 use ixa::prelude::*;
 // use rand_distr::Exp;
 use crate::GI;
+use crate::contacts::ContactsExt;
 use crate::people::{InfectionStatus, Person, PersonId};
 pub type InfectionStatusEvent = PropertyChangeEvent<Person, InfectionStatus>;
 
@@ -8,7 +9,7 @@ fn handle_infection_status_change(context: &mut Context, event: InfectionStatusE
     trace!("Handling infection status event");
     if event.current == InfectionStatus::I {
         let infector = event.entity_id;
-        for infectee in get_contacts(context, infector) {
+        for infectee in context.get_contacts(infector).unwrap() {
             schedule_infection_attempt(context, infector, infectee);
         }
         schedule_recovery(context, infector);

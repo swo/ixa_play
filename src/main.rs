@@ -3,7 +3,8 @@ mod incidence_report;
 mod infection_manager;
 mod people;
 
-use ixa::{Context, error, info, run_with_args};
+use ixa::prelude::*;
+use ixa::run_with_args;
 
 static I0: u64 = 1;
 static GI: f64 = 10.0;
@@ -19,6 +20,7 @@ fn main() {
         incidence_report::init(context, _args.output_dir.expect("no output dir"))
             .expect("Failed to init incidence report");
         infection_manager::init(context);
+        contacts::init(context);
         people::init(context);
         Ok(())
     });
