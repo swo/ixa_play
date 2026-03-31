@@ -1,11 +1,12 @@
 use crate::Parameters;
-use crate::people::{Person, PersonId};
+use crate::infection::InfectionStatus;
 use ixa::prelude::*;
 use std::collections::HashMap;
 
 pub type PersonCreatedEvent = EntityCreatedEvent<Person>;
 pub type ContactsMap = HashMap<PersonId, Option<Vec<PersonId>>>;
 
+define_entity!(Person);
 define_data_plugin!(ContactsPlugin, ContactsMap, HashMap::new());
 
 pub trait ContactsExt: PluginContext {
@@ -52,9 +53,14 @@ fn handle_person_created(context: &mut Context, event: PersonCreatedEvent) {
     context.init_person_contacts(event.entity_id);
 }
 
-pub fn init(context: &mut Context) {
+pub fn init(context: &mut Context, i0: usize) {
     trace!("Initializing contacts");
     context.subscribe_to_event::<PersonCreatedEvent>(handle_person_created);
+
+    for _ in 0..i0 {
+        let person: PersonId = context.add_entity(()).expect("failed to add person");
+        context.set_property(person, InfectionStatus::I);
+    }
 }
 
 #[cfg(test)]
@@ -64,7 +70,7 @@ mod tests {
     #[test]
     fn new_person_has_none_contacts() {
         let mut context = Context::new();
-        init(&mut context);
+        init(&mut context, 0);
         let person_id: PersonId = context.add_entity(()).unwrap();
         let contacts = context.get_data(ContactsPlugin).get(&person_id);
         assert_eq!(contacts, None)
@@ -88,7 +94,7 @@ mod tests {
             )
             .unwrap();
 
-        init(&mut context);
+        init(&mut context, 0);
         let person_id: PersonId = context.add_entity(()).unwrap();
         let contacts = context.get_contacts(person_id).unwrap();
         assert_eq!(contacts.len(), n_offspring)

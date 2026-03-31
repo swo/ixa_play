@@ -4,8 +4,8 @@ use ixa::prelude::*;
 use ixa::trace;
 use serde::Serialize;
 
-use crate::infection_manager::InfectionStatusEvent;
-use crate::people::{InfectionStatus, Person};
+use crate::infection::{InfectionStatus, InfectionStatusEvent};
+use crate::population::Person;
 
 #[derive(Serialize, Clone)]
 struct PrevalenceReportItem {

@@ -1,7 +1,6 @@
-mod contacts;
 mod incidence_report;
-mod infection_manager;
-mod people;
+mod infection;
+mod population;
 
 use ixa::prelude::*;
 use ixa::run_with_args;
@@ -40,7 +39,6 @@ fn init(context: &mut Context, output_dir: std::path::PathBuf) {
 
     // initialize the modules
     incidence_report::init(context, output_dir).expect("Failed to init incidence report");
-    infection_manager::init(context, parameters.gi);
-    contacts::init(context);
-    people::init(context, parameters.i0);
+    infection::init(context, parameters.gi);
+    population::init(context, parameters.i0);
 }

@@ -1,7 +1,17 @@
 use ixa::prelude::*;
-// use rand_distr::Exp;
-use crate::contacts::ContactsExt;
-use crate::people::{InfectionStatus, Person, PersonId};
+
+use crate::population::{ContactsExt, Person, PersonId};
+
+define_property!(
+    enum InfectionStatus {
+        S,
+        I,
+        R,
+    },
+    Person,
+    default_const = InfectionStatus::S
+);
+
 pub type InfectionStatusEvent = PropertyChangeEvent<Person, InfectionStatus>;
 
 fn handle_infection_status_change(context: &mut Context, event: InfectionStatusEvent, gi: f64) {
