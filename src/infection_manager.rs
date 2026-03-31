@@ -40,11 +40,14 @@ fn recover(context: &mut Context, person: PersonId) {
 }
 
 fn attempt_infection(context: &mut Context, infector: PersonId, infectee: PersonId) {
-    trace!("Infecting");
+    trace!("Attempting infection");
     if context.get_property::<Person, InfectionStatus>(infector) == InfectionStatus::I
         && context.get_property::<Person, InfectionStatus>(infectee) == InfectionStatus::S
     {
+        trace!("{:?} infected {:?}", infector, infectee);
         context.set_property(infectee, InfectionStatus::I);
+    } else {
+        trace!("No infection")
     }
 }
 

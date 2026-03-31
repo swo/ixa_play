@@ -1,5 +1,5 @@
 SRC = $(wildcard src/*.rs)
-DATA = output/creation.csv
+DATA = output/prevalence.csv
 LOG = WARN
 
 all: $(DATA)
