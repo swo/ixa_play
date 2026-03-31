@@ -1,8 +1,7 @@
-use std::collections::HashMap;
-
-use crate::N_OFFSPRING;
+use crate::Parameters;
 use crate::people::{Person, PersonId};
 use ixa::prelude::*;
+use std::collections::HashMap;
 
 pub type PersonCreatedEvent = EntityCreatedEvent<Person>;
 pub type ContactsMap = HashMap<PersonId, Option<Vec<PersonId>>>;
@@ -17,7 +16,13 @@ pub trait ContactsExt: PluginContext {
 
     fn generate_contacts(&mut self, contactor: PersonId) -> Vec<PersonId> {
         trace!("Generating contacts for {:?}", contactor);
-        let contactees: Vec<PersonId> = (0..N_OFFSPRING)
+
+        let n_offspring = self
+            .get_global_property_value(Parameters)
+            .unwrap()
+            .n_offspring;
+
+        let contactees: Vec<PersonId> = (0..n_offspring)
             .map(|_| self.add_entity(()).expect("failed to add person"))
             .collect();
 

@@ -1,37 +1,41 @@
-use ixa::{ExecutionPhase, prelude::*};
+use ixa::prelude::*;
 // use rand_distr::Exp;
-use crate::GI;
 use crate::contacts::ContactsExt;
 use crate::people::{InfectionStatus, Person, PersonId};
 pub type InfectionStatusEvent = PropertyChangeEvent<Person, InfectionStatus>;
 
-fn handle_infection_status_change(context: &mut Context, event: InfectionStatusEvent) {
+fn handle_infection_status_change(context: &mut Context, event: InfectionStatusEvent, gi: f64) {
     trace!("Handling infection status event");
+
     if event.current == InfectionStatus::I {
         let infector = event.entity_id;
+
+        // schedule infections and recovery for one generation interval in the future
+        let t = context.get_current_time() + gi;
+
         for infectee in context.get_contacts(infector).unwrap() {
-            schedule_infection_attempt(context, infector, infectee);
+            schedule_infection_attempt(context, infector, infectee, t);
         }
 
-        schedule_recovery(context, infector, ExecutionPhase::Last);
+        schedule_recovery(context, infector, t);
     }
 }
 
-fn schedule_infection_attempt(context: &mut Context, infector: PersonId, infectee: PersonId) {
+fn schedule_infection_attempt(
+    context: &mut Context,
+    infector: PersonId,
+    infectee: PersonId,
+    time: f64,
+) {
     trace!("Scheduling infection");
-    let current_time = context.get_current_time();
-    context.add_plan(current_time + GI, move |context| {
+    context.add_plan(time, move |context| {
         attempt_infection(context, infector, infectee)
     });
 }
 
-fn schedule_recovery(context: &mut Context, person: PersonId, phase: ExecutionPhase) {
-    trace!("Schedule recovery");
-    context.add_plan_with_phase(
-        context.get_current_time() + GI,
-        move |context| recover(context, person),
-        phase,
-    );
+fn schedule_recovery(context: &mut Context, person: PersonId, time: f64) {
+    trace!("Scheduling recovery");
+    context.add_plan(time, move |context| recover(context, person));
 }
 
 fn recover(context: &mut Context, person: PersonId) {
@@ -41,6 +45,7 @@ fn recover(context: &mut Context, person: PersonId) {
 
 fn attempt_infection(context: &mut Context, infector: PersonId, infectee: PersonId) {
     trace!("Attempting infection");
+    // only do the infection if the planned infector is infectious and the planned infectee is susceptible
     if context.get_property::<Person, InfectionStatus>(infector) == InfectionStatus::I
         && context.get_property::<Person, InfectionStatus>(infectee) == InfectionStatus::S
     {
@@ -51,7 +56,9 @@ fn attempt_infection(context: &mut Context, infector: PersonId, infectee: Person
     }
 }
 
-pub fn init(context: &mut Context) {
+pub fn init(context: &mut Context, gi: f64) {
     trace!("Initializing infection_manager");
-    context.subscribe_to_event::<InfectionStatusEvent>(handle_infection_status_change);
+    context.subscribe_to_event::<InfectionStatusEvent>(move |context, event| {
+        handle_infection_status_change(context, event, gi)
+    });
 }

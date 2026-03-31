@@ -5,32 +5,42 @@ mod people;
 
 use ixa::prelude::*;
 use ixa::run_with_args;
+use serde::{Deserialize, Serialize};
 
-static I0: u64 = 1;
-static GI: f64 = 10.0;
-static MAX_TIME: f64 = 25.0;
-static N_OFFSPRING: usize = 3;
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ParametersValues {
+    pub i0: usize,
+    pub gi: f64,
+    pub max_time: f64,
+    pub n_offspring: usize,
+}
+
+define_global_property!(Parameters, ParametersValues);
 
 fn main() {
-    let result = run_with_args(|context: &mut Context, _args, _| {
-        // Shut down the simulation after `max_time`
-        context.add_plan(MAX_TIME, |context| {
-            context.shutdown();
-        });
-        incidence_report::init(context, _args.output_dir.expect("no output dir"))
-            .expect("Failed to init incidence report");
-        infection_manager::init(context);
-        contacts::init(context);
-        people::init(context);
+    run_with_args(|context: &mut Context, _args, _| {
+        init(context, _args.output_dir.expect("no output dir"));
         Ok(())
+    })
+    .unwrap();
+}
+
+fn init(context: &mut Context, output_dir: std::path::PathBuf) {
+    // note that the config is loaded automatically
+
+    let parameters = context
+        .get_global_property_value(Parameters)
+        .unwrap()
+        .clone();
+
+    // Shut down the simulation after `max_time`
+    context.add_plan(parameters.max_time, |context| {
+        context.shutdown();
     });
 
-    match result {
-        Ok(_) => {
-            info!("Simulation finished executing");
-        }
-        Err(e) => {
-            error!("Simulation exited with error: {}", e);
-        }
-    }
+    // initialize the modules
+    incidence_report::init(context, output_dir).expect("Failed to init incidence report");
+    infection_manager::init(context, parameters.gi);
+    contacts::init(context);
+    people::init(context, parameters.i0);
 }

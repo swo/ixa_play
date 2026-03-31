@@ -1,8 +1,6 @@
 use ixa::prelude::*;
 use ixa::trace;
 
-use crate::I0;
-
 define_entity!(Person);
 define_property!(
     enum InfectionStatus {
@@ -14,9 +12,9 @@ define_property!(
     default_const = InfectionStatus::S
 );
 
-pub fn init(context: &mut Context) {
+pub fn init(context: &mut Context, i0: usize) {
     trace!("Initializing person");
-    for _ in 0..I0 {
+    for _ in 0..i0 {
         let person: PersonId = context.add_entity(()).expect("failed to add person");
         context.set_property(person, InfectionStatus::I);
     }
