@@ -56,3 +56,41 @@ pub fn init(context: &mut Context) {
     trace!("Initializing contacts");
     context.subscribe_to_event::<PersonCreatedEvent>(handle_person_created);
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn new_person_has_none_contacts() {
+        let mut context = Context::new();
+        init(&mut context);
+        let person_id: PersonId = context.add_entity(()).unwrap();
+        let contacts = context.get_data(ContactsPlugin).get(&person_id);
+        assert_eq!(contacts, None)
+    }
+
+    #[test]
+    fn query_contacts_creates_them() {
+        let n_offspring = 3;
+
+        let mut context = Context::new();
+
+        context
+            .set_global_property_value(
+                crate::Parameters,
+                crate::ParametersValues {
+                    i0: 0,
+                    gi: 0.0,
+                    max_time: 0.0,
+                    n_offspring,
+                },
+            )
+            .unwrap();
+
+        init(&mut context);
+        let person_id: PersonId = context.add_entity(()).unwrap();
+        let contacts = context.get_contacts(person_id).unwrap();
+        assert_eq!(contacts.len(), n_offspring)
+    }
+}
