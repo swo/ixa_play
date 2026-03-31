@@ -1,4 +1,4 @@
-use ixa::prelude::*;
+use ixa::{ExecutionPhase, prelude::*};
 // use rand_distr::Exp;
 use crate::GI;
 use crate::contacts::ContactsExt;
@@ -12,7 +12,8 @@ fn handle_infection_status_change(context: &mut Context, event: InfectionStatusE
         for infectee in context.get_contacts(infector).unwrap() {
             schedule_infection_attempt(context, infector, infectee);
         }
-        schedule_recovery(context, infector);
+
+        schedule_recovery(context, infector, ExecutionPhase::Last);
     }
 }
 
@@ -24,11 +25,13 @@ fn schedule_infection_attempt(context: &mut Context, infector: PersonId, infecte
     });
 }
 
-fn schedule_recovery(context: &mut Context, person: PersonId) {
+fn schedule_recovery(context: &mut Context, person: PersonId, phase: ExecutionPhase) {
     trace!("Schedule recovery");
-    context.add_plan(context.get_current_time() + GI, move |context| {
-        recover(context, person)
-    });
+    context.add_plan_with_phase(
+        context.get_current_time() + GI,
+        move |context| recover(context, person),
+        phase,
+    );
 }
 
 fn recover(context: &mut Context, person: PersonId) {
