@@ -14,7 +14,11 @@ define_property!(
 
 pub type InfectionStatusEvent = PropertyChangeEvent<Person, InfectionStatus>;
 
-fn handle_infection_status_change(context: &mut Context, event: InfectionStatusEvent, gi: f64) {
+fn handle_infection_status_change(
+    context: &mut Context,
+    event: InfectionStatusEvent,
+    gi: f64,
+) -> Result<(), IxaError> {
     trace!("Handling infection status event");
 
     if event.current == InfectionStatus::I {
@@ -23,12 +27,14 @@ fn handle_infection_status_change(context: &mut Context, event: InfectionStatusE
         // schedule infections and recovery for one generation interval in the future
         let t = context.get_current_time() + gi;
 
-        for infectee in context.get_contacts(infector).unwrap() {
+        for infectee in context.get_contacts(infector)?.clone() {
             schedule_infection_attempt(context, infector, infectee, t);
         }
 
         schedule_recovery(context, infector, t);
     }
+
+    Ok(())
 }
 
 fn schedule_infection_attempt(
@@ -69,6 +75,6 @@ fn attempt_infection(context: &mut Context, infector: PersonId, infectee: Person
 pub fn init(context: &mut Context, gi: f64) {
     trace!("Initializing infection_manager");
     context.subscribe_to_event::<InfectionStatusEvent>(move |context, event| {
-        handle_infection_status_change(context, event, gi)
-    });
+        handle_infection_status_change(context, event, gi).unwrap();
+    })
 }
