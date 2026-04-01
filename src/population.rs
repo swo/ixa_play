@@ -37,12 +37,14 @@ pub trait ContactsExt: PluginContext {
 
     fn get_contacts(&mut self, person_id: PersonId) -> Result<Vec<PersonId>, IxaError> {
         trace!("Getting contacts for {:?}", person_id);
-        if let Some(Some(contacts)) = self.get_data(ContactsPlugin).get(&person_id).cloned() {
+        let value = self.get_data(ContactsPlugin).get(&person_id);
+
+        match value {
+            None => Err(IxaError::IxaError("slot not initialized".to_string())),
             // if contacts already exist, use them
-            Ok(contacts)
-        } else {
+            Some(Some(contacts)) => Ok(contacts.clone()),
             // otherwise, make new ones
-            Ok(self.generate_contacts(person_id))
+            Some(None) => Ok(self.generate_contacts(person_id)),
         }
     }
 }
@@ -71,9 +73,19 @@ mod tests {
     fn new_person_has_none_contacts() {
         let mut context = Context::new();
         init(&mut context, 0);
-        let person_id: PersonId = context.add_entity(()).unwrap();
-        let contacts = context.get_data(ContactsPlugin).get(&person_id);
-        assert_eq!(contacts, None)
+        context.add_plan(0.0, |context| {
+            context.add_entity::<Person, _>(()).unwrap();
+        });
+        context.execute();
+
+        // there should be only one person in the simulation
+        assert_eq!(context.get_entity_count::<Person>(), 1);
+        // pull out their ID
+        let person_id = context.get_entity_iterator::<Person>().next().unwrap();
+
+        let value = context.get_data(ContactsPlugin).get(&person_id);
+        assert!(value.is_some(), "slot should be initialized");
+        assert!(value.unwrap().is_none(), "value in the slot should be None");
     }
 
     #[test]
@@ -95,7 +107,16 @@ mod tests {
             .unwrap();
 
         init(&mut context, 0);
-        let person_id: PersonId = context.add_entity(()).unwrap();
+        context.add_plan(0.0, |context| {
+            context.add_entity::<Person, _>(()).unwrap();
+        });
+        context.execute();
+        // there should be only one person in the simulation
+        assert_eq!(context.get_entity_count::<Person>(), 1);
+        // pull out their ID
+        let person_id = context.get_entity_iterator::<Person>().next().unwrap();
+
+        // check this person has 3 contacts
         let contacts = context.get_contacts(person_id).unwrap();
         assert_eq!(contacts.len(), n_offspring)
     }
