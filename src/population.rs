@@ -15,7 +15,7 @@ pub trait ContactsExt: PluginContext {
         self.get_data_mut(ContactsPlugin).insert(person_id, None);
     }
 
-    fn generate_contacts(&mut self, contactor: PersonId) -> Vec<PersonId> {
+    fn generate_contacts(&mut self, contactor: PersonId) {
         trace!("Generating contacts for {:?}", contactor);
 
         let n_offspring = self
@@ -27,24 +27,30 @@ pub trait ContactsExt: PluginContext {
             .map(|_| self.add_entity(()).expect("failed to add person"))
             .collect();
 
+        trace!("Contactees are: {:?}", contactees);
+
         self.get_data_mut(ContactsPlugin)
-            .insert(contactor, Some(contactees.clone()));
-
-        trace!("Contactees are {:?}", contactees);
-
-        contactees
+            .insert(contactor, Some(contactees));
     }
 
-    fn get_contacts(&mut self, person_id: PersonId) -> Result<Vec<PersonId>, IxaError> {
+    fn get_contacts(&mut self, person_id: PersonId) -> Result<&Vec<PersonId>, IxaError> {
         trace!("Getting contacts for {:?}", person_id);
-        let value = self.get_data(ContactsPlugin).get(&person_id);
 
-        match value {
-            None => Err(IxaError::IxaError("slot not initialized".to_string())),
-            // if contacts already exist, use them
-            Some(Some(contacts)) => Ok(contacts.clone()),
-            // otherwise, make new ones
-            Some(None) => Ok(self.generate_contacts(person_id)),
+        if self
+            .get_data(ContactsPlugin)
+            .get(&person_id)
+            .expect("every person should be initialized")
+            .is_none()
+        {
+            self.generate_contacts(person_id);
+        }
+
+        match self.get_data(ContactsPlugin).get(&person_id) {
+            None => Err(IxaError::IxaError(
+                "contact map not initialized on person creation".to_string(),
+            )),
+            Some(None) => Err(IxaError::IxaError("contacts not generated".to_string())),
+            Some(Some(contactees)) => Ok(contactees),
         }
     }
 }
@@ -118,6 +124,6 @@ mod tests {
 
         // check this person has 3 contacts
         let contacts = context.get_contacts(person_id).unwrap();
-        assert_eq!(contacts.len(), n_offspring)
+        assert_eq!(contacts.clone().len(), n_offspring)
     }
 }
