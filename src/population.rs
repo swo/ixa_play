@@ -33,7 +33,7 @@ pub trait ContactsExt: PluginContext {
             .insert(contactor, Some(contactees));
     }
 
-    fn get_contacts(&mut self, person_id: PersonId) -> Result<&Vec<PersonId>, IxaError> {
+    fn get_contacts(&mut self, person_id: PersonId) -> Result<&Vec<PersonId>, &str> {
         trace!("Getting contacts for {:?}", person_id);
 
         if self
@@ -46,10 +46,8 @@ pub trait ContactsExt: PluginContext {
         }
 
         match self.get_data(ContactsPlugin).get(&person_id) {
-            None => Err(IxaError::IxaError(
-                "contact map not initialized on person creation".to_string(),
-            )),
-            Some(None) => Err(IxaError::IxaError("contacts not generated".to_string())),
+            None => Err("contact map not initialized on person creation"),
+            Some(None) => Err("contacts not generated"),
             Some(Some(contactees)) => Ok(contactees),
         }
     }
