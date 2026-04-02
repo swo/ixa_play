@@ -1,35 +1,44 @@
 mod incidence_report;
-mod infection_manager;
-mod people;
-mod transmission_manager;
+mod infection;
+mod population;
 
-use ixa::{Context, error, info, run_with_args};
+use ixa::prelude::*;
+use ixa::run_with_args;
+use serde::{Deserialize, Serialize};
 
-static POPULATION: u64 = 100;
-static FORCE_OF_INFECTION: f64 = 0.1;
-static MAX_TIME: f64 = 200.0;
-static INFECTION_DURATION: f64 = 10.0;
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ParametersValues {
+    pub i0: usize,
+    pub gi: f64,
+    pub max_time: f64,
+    pub n_offspring: usize,
+}
+
+define_global_property!(Parameters, ParametersValues);
 
 fn main() {
-    let result = run_with_args(|context: &mut Context, _args, _| {
-        // Add a plan to shut down the simulation after `max_time`, regardless of
-        // what else is happening in the model.
-        context.add_plan(MAX_TIME, |context| {
-            context.shutdown();
-        });
-        people::init(context);
-        transmission_manager::init(context);
-        infection_manager::init(context);
-        incidence_report::init(context).expect("Failed to init incidence report");
+    run_with_args(|context: &mut Context, _args, _| {
+        init(context, _args.output_dir.expect("no output dir"));
         Ok(())
+    })
+    .unwrap();
+}
+
+fn init(context: &mut Context, output_dir: std::path::PathBuf) {
+    // note that the config is loaded automatically
+
+    let parameters = context
+        .get_global_property_value(Parameters)
+        .unwrap()
+        .clone();
+
+    // Shut down the simulation after `max_time`
+    context.add_plan(parameters.max_time, |context| {
+        context.shutdown();
     });
 
-    match result {
-        Ok(_) => {
-            info!("Simulation finished executing");
-        }
-        Err(e) => {
-            error!("Simulation exited with error: {}", e);
-        }
-    }
+    // initialize the modules
+    incidence_report::init(context, output_dir).expect("Failed to init incidence report");
+    infection::init(context, parameters.gi);
+    population::init(context, parameters.i0);
 }

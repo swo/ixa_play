@@ -4,45 +4,36 @@ use ixa::prelude::*;
 use ixa::trace;
 use serde::Serialize;
 
-use crate::infection_manager::InfectionStatusEvent;
-use crate::people::{InfectionStatus, PersonId};
+use crate::infection::{InfectionStatus, InfectionStatusEvent};
+use crate::population::Person;
 
 #[derive(Serialize, Clone)]
-struct IncidenceReportItem {
+struct PrevalenceReportItem {
     time: f64,
-    person_id: PersonId,
-    infection_status: InfectionStatus,
+    n: usize,
 }
 
-define_report!(IncidenceReportItem);
+define_report!(PrevalenceReportItem);
 
-fn handle_infection_status_change(context: &mut Context, event: InfectionStatusEvent) {
+fn handle_infection_status_event(context: &mut Context, event: InfectionStatusEvent) {
     trace!(
-        "Recording infection status change from {:?} to {:?} for {:?}",
-        event.previous, event.current, event.entity_id
+        "Recording creation event for ID {} from {:?} to {:?}",
+        event.entity_id, event.previous, event.current
     );
-    context.send_report(IncidenceReportItem {
+    context.send_report(PrevalenceReportItem {
         time: context.get_current_time(),
-        person_id: event.entity_id,
-        infection_status: event.current,
+        n: context.query_entity_count::<Person, _>((InfectionStatus::I,)),
     });
 }
 
-pub fn init(context: &mut Context) -> Result<(), IxaError> {
+pub fn init(context: &mut Context, output_dir: PathBuf) -> Result<(), IxaError> {
     trace!("Initializing incidence_report");
 
-    // Output directory is relative to the directory with the Cargo.toml file.
-    let output_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-
-    // In the configuration of report options below, we set `overwrite(true)`, which is not
-    // recommended for production code in order to prevent accidental data loss. It is set
-    // here so that newcomers won't have to deal with a confusing error while running
-    // examples.
     context
         .report_options()
-        .directory(output_path)
+        .directory(output_dir)
         .overwrite(true);
-    context.add_report::<IncidenceReportItem>("incidence")?;
-    context.subscribe_to_event::<InfectionStatusEvent>(handle_infection_status_change);
+    context.add_report::<PrevalenceReportItem>("prevalence")?;
+    context.subscribe_to_event::<InfectionStatusEvent>(handle_infection_status_event);
     Ok(())
 }
