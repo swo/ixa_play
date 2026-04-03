@@ -85,7 +85,7 @@ mod tests {
         // there should be only one person in the simulation
         assert_eq!(context.get_entity_count::<Person>(), 1);
         // pull out their ID
-        let person_id = context.get_entity_iterator::<Person>().next().unwrap();
+        let person_id: PersonId = context.get_entity_iterator().next().unwrap();
 
         let value = context.get_data(ContactsPlugin).get(&person_id);
         assert!(value.is_some(), "slot should be initialized");
@@ -118,7 +118,7 @@ mod tests {
         // there should be only one person in the simulation
         assert_eq!(context.get_entity_count::<Person>(), 1);
         // pull out their ID
-        let person_id = context.get_entity_iterator::<Person>().next().unwrap();
+        let person_id: PersonId = context.get_entity_iterator().next().unwrap();
 
         // check this person has 3 contacts
         let contacts = context.get_contacts(person_id).unwrap();
