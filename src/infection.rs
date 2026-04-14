@@ -56,8 +56,8 @@ fn recover(context: &mut Context, person: PersonId) {
 fn attempt_infection(context: &mut Context, infector: PersonId, infectee: PersonId) {
     trace!("Attempting infection");
     // only do the infection if the planned infector is infectious and the planned infectee is susceptible
-    if context.get_property::<Person, InfectionStatus>(infector) == InfectionStatus::I
-        && context.get_property::<Person, InfectionStatus>(infectee) == InfectionStatus::S
+    if context.get_property::<_, InfectionStatus>(infector) == InfectionStatus::I
+        && context.get_property::<_, InfectionStatus>(infectee) == InfectionStatus::S
     {
         trace!("{:?} infected {:?}", infector, infectee);
         context.set_property(infectee, InfectionStatus::I);
