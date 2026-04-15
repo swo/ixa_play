@@ -106,6 +106,7 @@ mod tests {
                     gi: 0.0,
                     max_time: 0.0,
                     n_offspring,
+                    p_vax: 0.0,
                 },
             )
             .unwrap();

@@ -2,7 +2,6 @@ mod incidence_report;
 mod infection;
 mod population;
 mod vaccine;
-mod vaccine_basic;
 
 use ixa::prelude::*;
 use ixa::run_with_args;
@@ -14,6 +13,7 @@ pub struct ParametersValues {
     pub gi: f64,
     pub max_time: f64,
     pub n_offspring: usize,
+    pub p_vax: f64,
 }
 
 define_global_property!(Parameters, ParametersValues);
@@ -43,4 +43,5 @@ fn init(context: &mut Context, output_dir: std::path::PathBuf) {
     incidence_report::init(context, output_dir).expect("Failed to init incidence report");
     infection::init(context, parameters.gi);
     population::init(context, parameters.i0);
+    vaccine::init(context, parameters.p_vax);
 }

@@ -1,6 +1,7 @@
 use ixa::prelude::*;
 
 use crate::population::{ContactsExt, Person, PersonId};
+use crate::vaccine::Vaccine;
 
 define_property!(
     enum InfectionStatus {
@@ -58,7 +59,9 @@ fn attempt_infection(context: &mut Context, infector: PersonId, infectee: Person
     // only do the infection if the planned infector is infectious and the planned infectee is susceptible
     if context.get_property::<_, InfectionStatus>(infector) == InfectionStatus::I
         && context.get_property::<_, InfectionStatus>(infectee) == InfectionStatus::S
+        && !context.is_vaccinated(infectee).unwrap()
     {
+        let _ = context.is_vaccinated(infectee);
         trace!("{:?} infected {:?}", infector, infectee);
         context.set_property(infectee, InfectionStatus::I);
     } else {
