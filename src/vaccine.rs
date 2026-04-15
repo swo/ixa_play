@@ -1,31 +1,28 @@
-use crate::population::{PersonCreatedEvent, PersonId};
+use crate::population::{Person, PersonCreatedEvent, PersonId};
 use ixa::prelude::*;
 
-define_entity!(Vaccination);
-define_property!(struct Vaccinee(PersonId), Vaccination);
+define_property!(
+    struct VaccinationStatus(bool),
+    Person,
+    default_const = VaccinationStatus(false)
+);
+
 define_rng!(VaccineRng);
 
 pub trait Vaccine: PluginContext {
     fn vaccinate(&mut self, person_id: PersonId) -> Result<(), ()> {
+        if self.is_vaccinated(person_id).unwrap() {
+            return Err(());
+        }
+
         trace!("Vaccinating {person_id:?}");
-        self.add_entity(with!(Vaccination, Vaccinee(person_id)))
-            .unwrap();
+        self.set_property(person_id, VaccinationStatus(true));
         Ok(())
     }
 
-    fn get_vaccination_history(
-        &mut self,
-        person_id: PersonId,
-    ) -> Result<impl Iterator<Item = EntityId<Vaccination>>, ()> {
-        let q = self.query_result_iterator(with!(Vaccination, Vaccinee(person_id)));
-        Ok(q)
-    }
-
     fn is_vaccinated(&mut self, person_id: PersonId) -> Result<bool, ()> {
-        match self.get_vaccination_history(person_id)?.count() {
-            0 => Ok(false),
-            1 => Ok(true),
-            _ => Err(()),
+        match self.get_property(person_id) {
+            VaccinationStatus(x) => Ok(x),
         }
     }
 }
