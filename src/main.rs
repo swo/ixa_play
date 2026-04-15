@@ -1,6 +1,8 @@
 mod incidence_report;
 mod infection;
 mod population;
+mod vaccine;
+mod vaccine_basic;
 
 use ixa::prelude::*;
 use ixa::run_with_args;
