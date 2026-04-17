@@ -3,6 +3,7 @@
     "i0": 1,
     "gi": 10.0,
     "max_time": 25.0,
-    "n_offspring": 3
+    "n_offspring": 3,
+    "p_vax": 0.15
   }
 }
