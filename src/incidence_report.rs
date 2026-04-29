@@ -22,7 +22,7 @@ fn handle_infection_status_event(context: &mut Context, event: InfectionStatusEv
     );
     context.send_report(PrevalenceReportItem {
         time: context.get_current_time(),
-        n: context.query_entity_count::<Person, _>((InfectionStatus::I,)),
+        n: context.query_entity_count(with!(Person, InfectionStatus::I)),
     });
 }
 

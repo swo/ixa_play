@@ -8,7 +8,7 @@ LOG = WARN
 all: $(DATA)
 	@cat $(DATA)
 
-$(DATA): $(SRC)
+$(DATA): $(SRC) $(CONFIG)
 	cargo run -- --output output/ --config $(CONFIG) --log-level=$(LOG)
 
 clean:

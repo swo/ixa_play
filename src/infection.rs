@@ -1,6 +1,6 @@
 use ixa::prelude::*;
 
-use crate::population::{ContactsExt, Person, PersonId};
+use crate::population::{Person, PersonId, get_contacts};
 use crate::vaccine::Vaccine;
 
 define_property!(
@@ -24,7 +24,8 @@ fn handle_infection_status_change(context: &mut Context, event: InfectionStatusE
         // schedule infections and recovery for one generation interval in the future
         let t = context.get_current_time() + gi;
 
-        for infectee in context.get_contacts(infector).unwrap().clone() {
+        let infectees = get_contacts(context, infector);
+        for infectee in infectees {
             schedule_infection_attempt(context, infector, infectee, t);
         }
 
