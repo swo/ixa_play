@@ -14,6 +14,7 @@ pub struct ParametersValues {
     pub max_time: f64,
     pub n_offspring: usize,
     pub p_vax: f64,
+    pub n_generations: usize,
 }
 
 define_global_property!(Parameters, ParametersValues);
@@ -42,6 +43,6 @@ fn init(context: &mut Context, output_dir: std::path::PathBuf) {
     // initialize the modules
     incidence_report::init(context, output_dir).expect("Failed to init incidence report");
     infection::init(context, parameters.gi);
-    population::init(context, parameters.i0);
+    population::init(context, parameters.i0, parameters.n_generations);
     vaccine::init(context, parameters.p_vax);
 }
